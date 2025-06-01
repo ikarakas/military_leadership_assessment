@@ -1,4 +1,5 @@
-# Military Leadership Assessment Application v2.0
+# ALPHA : "Assessment of Leadership Potential and High-performance Abilities” 
+
 
 This Python-based command-line application uses machine learning to assess and predict leadership competencies for military officers.
 
@@ -6,10 +7,10 @@ This Python-based command-line application uses machine learning to assess and p
 
 * Locally hosted and run.
 * Utilizes open-source AI/ML libraries (scikit-learn, pandas, numpy).
-* Trains a model on a dataset of military officers (OF-2 to OF-6).
+* Trains a model on a dataset of military officers 
 * Predicts `leadership_competency_summary` (strategic_thinking, communication, team_leadership, execution, adaptability) for a given officer.
 * Supports generation of synthetic training data.
-* Verbose logging for operational transparency.
+
 
 ## Machine Learning Architecture
 
@@ -63,74 +64,80 @@ This Python-based command-line application uses machine learning to assess and p
    * R-squared (R²) score
    * Per-competency performance tracking
 
-### Machine Learning Pipeline - Design Details
-```
+### Machine Learning Pipeline - Detailed Design
 
 1. Input Data:
 
-The system primarily uses JSON Lines (.jsonl) files for training data, where each line is a JSON object representing an officer's profile.
-For individual predictions, it uses a single JSON file representing one officer.
-The data contains nested JSON structures for fields like competencies, competency_domains, and psychometric_scores.
+   The system primarily uses JSON Lines (.jsonl) files for training data, where each line is a JSON object representing an officer's profile.
+   For individual predictions, it uses a single JSON file representing one officer.
+   The data contains nested JSON structures for fields like competencies, competency_domains, and psychometric_scores.
 
 2. Feature Processing (feature_processor.py):
 
-Flattening Nested Data: Nested JSON objects within the officer data (e.g., competencies, psychometric_scores, leadership_competency_summary) are flattened into individual columns using pd.json_normalize. This makes them suitable for direct use as features or targets.
+   Flattening Nested Data: Nested JSON objects within the officer data (e.g., competencies, psychometric_scores, leadership_competency_summary) are flattened into individual columns using pd.json_normalize. This makes them suitable for direct use as features or targets.
 
-Feature Identification: The script defines specific lists for different types of features:
-* NUMERICAL_FEATURES: e.g., 'age', 'years_of_service'.
-* COMPETENCY_FEATURES: Flattened individual competency scores.
-* COMPETENCY_DOMAIN_FEATURES: Flattened competency domain scores.
-* PSYCHOMETRIC_FEATURES: Flattened psychometric scores.
-* CATEGORICAL_FEATURES: e.g., 'branch', 'rank', 'specialty'.
+   Feature Identification: The script defines specific lists for different types of features:
+   * NUMERICAL_FEATURES: e.g., 'age', 'years_of_service'.
+   * COMPETENCY_FEATURES: Flattened individual competency scores.
+   * COMPETENCY_DOMAIN_FEATURES: Flattened competency domain scores.
+   * PSYCHOMETRIC_FEATURES: Flattened psychometric scores.
+   * CATEGORICAL_FEATURES: e.g., 'branch', 'rank', 'specialty'.
 
-Preprocessing Pipelines: Scikit-learn's Pipeline and ColumnTransformer are used to create a preprocessing workflow.
-* Numerical Features:
-Missing values are imputed using the median strategy (SimpleImputer(strategy='median')).
-Features are then scaled using StandardScaler().
-* Categorical Features:
-Missing values are imputed with a constant string 'missing' (SimpleImputer(strategy='constant', fill_value='missing')).
-Features are then one-hot encoded using OneHotEncoder(handle_unknown='ignore', sparse_output=False). handle_unknown='ignore' is important for dealing with unseen categories during prediction.
+   Preprocessing Pipelines: Scikit-learn's Pipeline and ColumnTransformer are used to create a preprocessing workflow.
+   * Numerical Features:
+   Missing values are imputed using the median strategy (SimpleImputer(strategy='median')).
+   Features are then scaled using StandardScaler().
+   * Categorical Features:
+   Missing values are imputed with a constant string 'missing' (SimpleImputer(strategy='constant', fill_value='missing')).
+   Features are then one-hot encoded using OneHotEncoder(handle_unknown='ignore', sparse_output=False). handle_unknown='ignore' is important for dealing with unseen categories during prediction.
 
-Preprocessor Fitting: The ColumnTransformer (preprocessor) is fitted exclusively on the training dataset to learn imputation values, scaling parameters, and one-hot encoding mappings.
+   Preprocessor Fitting: The ColumnTransformer (preprocessor) is fitted exclusively on the training dataset to learn imputation values, scaling parameters, and one-hot encoding mappings.
 
-Data Transformation: The fitted preprocessor is used to transform both training data and new data for prediction, ensuring consistency.
+   Data Transformation: The fitted preprocessor is used to transform both training data and new data for prediction, ensuring consistency.
 
 3. Target Variables (TARGET_COLUMNS):
 
-The model aims to predict multiple leadership competency scores.
-These target columns are defined in TARGET_COLUMNS (e.g., "strategic_thinking", "communication", "team_leadership", "execution", "adaptability").
+   The model aims to predict multiple leadership competency scores.
+   These target columns are defined in TARGET_COLUMNS (e.g., "strategic_thinking", "communication", "team_leadership", "execution", "adaptability").
 
 4. Model Training (model_trainer.py):
 
-Feature and Target Separation: The get_features_and_targets function is used to separate the dataset into features (X) and target variables (Y).
-Data Splitting: The preprocessed feature set and target variables are split into training and testing sets using train_test_split (defaulting to a test size of 20% and random_state=42 for reproducibility).
-Model Algorithm:
-A RandomForestRegressor (with n_estimators=100, random_state=42, n_jobs=-1) is used as the base estimator.
-This is wrapped in a MultiOutputRegressor from scikit-learn, enabling the Random Forest to predict all target leadership competencies simultaneously.
-Model Fitting: The MultiOutputRegressor is trained using the preprocessed training features (X_train_proc) and corresponding training targets (Y_train).
-Saving Artifacts:
-The trained MultiOutputRegressor model is saved to a .joblib file (default: models/leadership_model.joblib).
-The fitted ColumnTransformer preprocessor is also saved to a .joblib file (default: models/preprocessor.joblib).
+   Feature and Target Separation: The get_features_and_targets function is used to separate the dataset into features (X) and target variables (Y).
+   
+   Data Splitting: The preprocessed feature set and target variables are split into training and testing sets using train_test_split (defaulting to a test size of 20% and random_state=42 for reproducibility).
+
+   Model Algorithm:
+   A RandomForestRegressor (with n_estimators=100, random_state=42, n_jobs=-1) is used as the base estimator.
+   This is wrapped in a MultiOutputRegressor from scikit-learn, enabling the Random Forest to predict all target leadership competencies simultaneously.
+   
+   Model Fitting: The MultiOutputRegressor is trained using the preprocessed training features (X_train_proc) and corresponding training targets (Y_train).
+   
+   Saving Artifacts:
+   The trained MultiOutputRegressor model is saved to a .joblib file (default: models/leadership_model.joblib).
+   The fitted ColumnTransformer preprocessor is also saved to a .joblib file (default: models/preprocessor.joblib).
 
 5. Model Evaluation (model_trainer.py):
 
-Predictions are made on both the training and test sets.
-Performance is evaluated for each target variable independently.
-Metrics Used:
-Mean Squared Error (MSE): mean_squared_error is calculated to measure the average squared difference between predicted and actual values.
-R-squared (R² score): r2_score is calculated to determine the proportion of the variance in the dependent variable that is predictable from the independent variables.
-Results are logged and can be used for visualization (e.g., plot_model_performance).
+   Predictions are made on both the training and test sets.
+   Performance is evaluated for each target variable independently.
+
+   Metrics Used:
+   Mean Squared Error (MSE): mean_squared_error is calculated to measure the average squared difference between predicted and actual values.
+   R-squared (R² score): r2_score is calculated to determine the proportion of the variance in the dependent variable that is predictable from the independent variables.
+   Results are logged and can be used for visualization (e.g., plot_model_performance).
+
 6. Prediction (predictor.py):
 
-Loading Artifacts: For making predictions on new officer data, the saved model (.joblib) and preprocessor (.joblib) are loaded.
-Data Preparation:
-The input officer data (a dictionary) is converted into a Pandas DataFrame.
-Nested JSON features are flattened using flatten_nested_json_features.
-The loaded preprocessor is used to transform the officer's features, ensuring all necessary columns are present (adding missing ones as NaN if needed, which the imputers in the preprocessor handle).
-Making Predictions: The preprocessed features of the officer are fed into the loaded model's predict method.
-Output: The predictions (an array of scores for the target competencies) are formatted into a dictionary, mapping target names to their predicted scores.
+   Loading Artifacts: For making predictions on new officer data, the saved model (.joblib) and preprocessor (.joblib) are loaded.
 
-```
+   Data Preparation:
+   The input officer data (a dictionary) is converted into a Pandas DataFrame.
+   Nested JSON features are flattened using flatten_nested_json_features.
+   The loaded preprocessor is used to transform the officer's features, ensuring all necessary columns are present (adding missing ones as NaN if needed, which the imputers in the preprocessor handle).
+   
+   Making Predictions: The preprocessed features of the officer are fed into the loaded model's predict method.
+   Output: The predictions (an array of scores for the target competencies) are formatted into a dictionary, mapping target names to their predicted scores.
+
 
 ## Security Considerations
 
