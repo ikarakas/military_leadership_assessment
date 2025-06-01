@@ -1,0 +1,193 @@
+{% extends "base.html" %}
+
+{% block title %}Analytics - Military Leadership Assessment{% endblock %}
+
+{% block content %}
+<div class="row mb-4">
+    <div class="col-12">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="card-title">Leadership Competency Distribution</h5>
+            </div>
+            <div class="card-body">
+                <div class="chart-container">
+                    <canvas id="competencyDistribution"></canvas>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="row">
+    <div class="col-md-6">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="card-title">Competency by Rank</h5>
+            </div>
+            <div class="card-body">
+                <div class="chart-container">
+                    <canvas id="rankComparison"></canvas>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-6">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="card-title">Competency by Branch</h5>
+            </div>
+            <div class="card-body">
+                <div class="chart-container">
+                    <canvas id="branchComparison"></canvas>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="row mt-4">
+    <div class="col-12">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="card-title">Key Statistics</h5>
+            </div>
+            <div class="card-body">
+                <div class="row" id="statistics">
+                    <div class="col-md-3">
+                        <div class="card bg-light">
+                            <div class="card-body text-center">
+                                <h6 class="card-title">Total Officers</h6>
+                                <h3 id="totalOfficers">-</h3>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-3">
+                        <div class="card bg-light">
+                            <div class="card-body text-center">
+                                <h6 class="card-title">Average Competency</h6>
+                                <h3 id="avgCompetency">-</h3>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-3">
+                        <div class="card bg-light">
+                            <div class="card-body text-center">
+                                <h6 class="card-title">Highest Competency</h6>
+                                <h3 id="highestCompetency">-</h3>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-3">
+                        <div class="card bg-light">
+                            <div class="card-body text-center">
+                                <h6 class="card-title">Model Accuracy</h6>
+                                <h3 id="modelAccuracy">-</h3>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+async function loadAnalytics() {
+    try {
+        const response = await fetch('/api/statistics');
+        const data = await response.json();
+        
+        if (data.success) {
+            // Update statistics
+            document.getElementById('totalOfficers').textContent = data.stats.total_officers;
+            document.getElementById('avgCompetency').textContent = data.stats.avg_competency.toFixed(2);
+            document.getElementById('highestCompetency').textContent = data.stats.highest_competency.toFixed(2);
+            document.getElementById('modelAccuracy').textContent = (data.stats.model_accuracy * 100).toFixed(1) + '%';
+
+            // Create competency distribution chart
+            const distributionCtx = document.getElementById('competencyDistribution').getContext('2d');
+            new Chart(distributionCtx, {
+                type: 'bar',
+                data: {
+                    labels: Object.keys(data.distribution),
+                    datasets: [{
+                        label: 'Number of Officers',
+                        data: Object.values(data.distribution),
+                        backgroundColor: 'rgba(54, 162, 235, 0.5)',
+                        borderColor: 'rgba(54, 162, 235, 1)',
+                        borderWidth: 1
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    scales: {
+                        y: {
+                            beginAtZero: true
+                        }
+                    }
+                }
+            });
+
+            // Create rank comparison chart
+            const rankCtx = document.getElementById('rankComparison').getContext('2d');
+            new Chart(rankCtx, {
+                type: 'radar',
+                data: {
+                    labels: Object.keys(data.rank_comparison[0].competencies),
+                    datasets: data.rank_comparison.map(rank => ({
+                        label: rank.rank,
+                        data: Object.values(rank.competencies),
+                        borderColor: rank.color,
+                        backgroundColor: rank.color.replace('1)', '0.2)')
+                    }))
+                },
+                options: {
+                    responsive: true,
+                    scales: {
+                        r: {
+                            beginAtZero: true,
+                            max: 5
+                        }
+                    }
+                }
+            });
+
+            // Create branch comparison chart
+            const branchCtx = document.getElementById('branchComparison').getContext('2d');
+            new Chart(branchCtx, {
+                type: 'bar',
+                data: {
+                    labels: Object.keys(data.branch_comparison),
+                    datasets: [{
+                        label: 'Average Competency',
+                        data: Object.values(data.branch_comparison),
+                        backgroundColor: 'rgba(75, 192, 192, 0.5)',
+                        borderColor: 'rgba(75, 192, 192, 1)',
+                        borderWidth: 1
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    scales: {
+                        y: {
+                            beginAtZero: true,
+                            max: 5
+                        }
+                    }
+                }
+            });
+        } else {
+            alert('Error loading analytics: ' + data.error);
+        }
+    } catch (error) {
+        console.error('Error:', error);
+        alert('An error occurred while loading analytics.');
+    }
+}
+
+// Load analytics when the page loads
+document.addEventListener('DOMContentLoaded', loadAnalytics);
+</script>
+{% endblock %} 
