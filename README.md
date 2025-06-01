@@ -1,4 +1,4 @@
-# ALPHA : "Assessment of Leadership Potential and High-performance Abilities” 
+# ALPHA : "Assessment of Leadership Potential and High-performance Abilities" 
 
 
 This Python-based command-line application uses machine learning to assess and predict leadership competencies for military officers.
@@ -10,6 +10,9 @@ This Python-based command-line application uses machine learning to assess and p
 * Trains a model on a dataset of military officers 
 * Predicts `leadership_competency_summary` (strategic_thinking, communication, team_leadership, execution, adaptability) for a given officer.
 * Supports generation of synthetic training data.
+* Web-based dashboard for interactive visualization and analysis.
+* Real-time leadership competency predictions with radar charts.
+* Analytics page for model performance metrics and feature importance.
 
 
 ## Machine Learning Architecture
@@ -267,6 +270,31 @@ python src/main.py --log-level DEBUG generate-synthetic-data \
     --output-path data/synthetic_data/generated.jsonl \
     --num-officers 500
 ```
+
+## Web Dashboard
+
+The application includes a web-based dashboard for interactive visualization and analysis of leadership competencies.
+
+### Features
+* Interactive web interface built with Flask
+* Real-time leadership competency predictions
+* Radar charts for visualizing competency scores
+* Analytics dashboard for model performance metrics
+* Feature importance visualization
+* Responsive design for desktop and mobile devices
+
+### Running the Web Dashboard
+```bash
+# Start the web server
+python src/web_dashboard.py
+```
+
+The dashboard will be available at `http://localhost:5000`
+
+### Dashboard Pages
+1. **Home**: Input form for new officer predictions
+2. **Analytics**: Model performance metrics and feature importance
+3. **Login**: Secure access to the dashboard (if authentication is enabled)
 
 ## Summary - Recommended Running Sequence for the new starters
 
