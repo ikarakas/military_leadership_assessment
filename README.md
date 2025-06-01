@@ -97,20 +97,18 @@ The application is designed to run completely offline and standalone:
 ```
 Package         Version
 --------------- -----------
-joblib          1.5.1
-names           0.3.0
-numpy           2.2.6
-pandas          2.2.3
-pip             25.1.1
-python-dateutil 2.9.0.post0
-pytz            2025.2
-scikit-learn    1.6.1
-scipy           1.15.3
-six             1.17.0
-threadpoolctl   3.6.0
-tzdata          2025.2
+flask           >=2.0.0
+joblib          >=1.0.0
+matplotlib      >=3.4.0
+numpy           >=1.20.0
+pandas          >=1.3.0
+scikit-learn    >=1.0.0
+seaborn         >=0.11.0
+click           >=8.0.0
+names           >=0.3.0  # For synthetic data generation
 ```
 
+Note: The versions shown are minimum required versions. The application will work with newer versions of these packages.
 
 ## Command Line Options
 
