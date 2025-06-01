@@ -22,6 +22,12 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 """
 
+"""
+Command-line interface for the Military Leadership Assessment system.
+Train models, generate synthetic data, make predictions, and visualize results.
+Simple commands, powerful insights.
+"""
+
 
 import argparse
 import logging

@@ -22,9 +22,10 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 """
 
-
 """
-Version information for the Military Leadership Assessment Application.
+Version information for the Military Leadership Assessment system.
+Tracks major, minor, and patch versions.
+Ensures consistent versioning across the application.
 """
 
 __version__ = "2.0.0"

@@ -22,6 +22,11 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 """
 
+"""
+Core utility functions for the Military Leadership Assessment system.
+Handles logging, date calculations, and common operations.
+The foundation that keeps everything running smoothly.
+"""
 
 import logging
 import os

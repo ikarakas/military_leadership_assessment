@@ -22,6 +22,11 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 """
 
+"""
+Makes leadership competency predictions for individual officers.
+Transforms raw officer data into actionable insights.
+Visualizes predictions through intuitive radar charts.
+"""
 
 import pandas as pd
 import joblib

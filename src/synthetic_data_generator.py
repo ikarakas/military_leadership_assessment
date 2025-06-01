@@ -22,6 +22,11 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 """
 
+"""
+Generates realistic synthetic military officer data for model development.
+Creates diverse profiles with realistic career progression and competency patterns.
+Enables robust model training without privacy concerns.
+"""
 
 import json
 import random

@@ -22,6 +22,11 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 """
 
+"""
+Trains machine learning models to predict leadership competencies.
+Uses Random Forest for robust predictions across multiple leadership dimensions.
+Data-driven insights for better leadership assessment.
+"""
 
 import pandas as pd
 from sklearn.model_selection import train_test_split

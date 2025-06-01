@@ -22,6 +22,11 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 """
 
+"""
+Loads and validates military officer data from JSON and JSONL files.
+Ensures data quality and consistency for model training and prediction.
+Simple interface, robust error handling.
+"""
 
 import json
 import pandas as pd

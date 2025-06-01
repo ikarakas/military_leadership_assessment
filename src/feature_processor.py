@@ -22,6 +22,12 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 """
 
+"""
+Processes and transforms military officer data for machine learning.
+Handles complex nested data structures, missing values, and feature engineering.
+Turns raw data into model-ready features.
+"""
+
 
 import pandas as pd
 import numpy as np

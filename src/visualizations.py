@@ -22,6 +22,11 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 """
 
+"""
+Creates insightful visualizations of leadership assessments and model performance.
+Transforms complex data into clear, actionable insights.
+Makes leadership competencies visible and understandable.
+"""
 
 import matplotlib.pyplot as plt
 import seaborn as sns
