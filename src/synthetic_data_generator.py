@@ -66,6 +66,40 @@ COMPETENCY_DOMAINS_LIST = ["cognitive", "social", "technological", "transformati
 PSYCHOMETRIC_SCORES_LIST = ["conscientiousness", "extraversion", "agreeableness", "neuroticism", "openness"]
 LEADERSHIP_SUMMARY_LIST = ["strategic_thinking", "communication", "team_leadership", "execution", "adaptability"]
 
+# Define feature groups
+NUMERICAL_FEATURES = [
+    'rank_index', 'age', 'years_of_service',
+    'combat_deployments', 'medals_and_commendations', 'unit_readiness_score',
+    'promotion_potential_score'
+]
+
+COMPETENCY_FEATURES = [
+    "thinks_strategically", "possesses_english_language_skills", "engages_in_ethical_reasoning",
+    "builds_trust", "facilitates_collaboration_communication", "builds_consensus",
+    "integrates_technology", "understands_effects_of_leveraging_technology",
+    "understands_capabilities", "instills_need_for_change", "anticipates_change_requirements",
+    "provides_support_for_change", "enables_empowers_others", "upholds_principles",
+    "relationship_oriented", "thrives_in_ambiguity", "demonstrates_resilience",
+    "learning_oriented", "operates_in_nato_context", "operates_in_military_context",
+    "operates_in_cross_cultural_context"
+]
+
+COMPETENCY_DOMAIN_FEATURES = [
+    "cognitive", "social", "technological", "transformative", "personal", "professional"
+]
+
+PSYCHOMETRIC_FEATURES = [
+    "conscientiousness", "extraversion", "agreeableness", "neuroticism", "openness"
+]
+
+CATEGORICAL_FEATURES = [
+    'branch', 'rank', 'specialty', 'education', 'leadership_style'
+]
+
+TARGET_COLUMNS = [
+    "strategic_thinking", "communication", "team_leadership", "execution", "adaptability"
+]
+
 def generate_random_date(start_year=1990, end_year=2010):
     year = random.randint(start_year, end_year)
     month = random.randint(1, 12)
@@ -162,19 +196,184 @@ def generate_synthetic_officer():
     return officer
 
 def generate_synthetic_data(num_officers, output_file):
-    """Generates a dataset of synthetic officers and saves it to a JSON Lines file."""
+    """
+    Generates synthetic officer data with a clear relationship between input competencies and target leadership competencies.
+    Adds randomization to prevent memorization.
+    """
     logger.info(f"Generating {num_officers} synthetic officer profiles...")
-    officers_data = [generate_synthetic_officer() for _ in range(num_officers)]
+    officers = []
+    for _ in range(num_officers):
+        officer = {}
+        # Generate basic info
+        officer['first_name'] = f"Officer_{random.randint(1, 1000)}"
+        officer['last_name'] = f"Last_{random.randint(1, 1000)}"
+        officer['age'] = random.randint(25, 60)
+        officer['years_of_service'] = random.randint(1, 35)
+        officer['rank_index'] = random.randint(1, 10)
+        officer['combat_deployments'] = random.randint(0, 10)
+        officer['medals_and_commendations'] = random.randint(0, 20)
+        officer['unit_readiness_score'] = random.uniform(0, 100)
+        officer['promotion_potential_score'] = random.uniform(0, 100)
+        officer['service_number'] = f"SN{random.randint(10000, 99999)}"
+        officer['service_start_date'] = (datetime.now() - timedelta(days=random.randint(365, 365*35))).strftime('%Y-%m-%d')
+        officer['current_date'] = datetime.now().strftime('%Y-%m-%d')
+        officer['branch'] = random.choice(['Army', 'Navy', 'Air Force', 'Marines'])
+        officer['rank'] = random.choice(['Lieutenant', 'Captain', 'Major', 'Colonel', 'General'])
+        officer['specialty'] = random.choice(['Infantry', 'Aviation', 'Intelligence', 'Logistics', 'Medical'])
+        officer['education'] = random.choice(['Bachelor', 'Master', 'PhD'])
+        officer['leadership_style'] = random.choice(['Democratic', 'Autocratic', 'Transformational', 'Servant'])
 
-    try:
-        os.makedirs(os.path.dirname(output_file), exist_ok=True)
-        with open(output_file, 'w') as f:
-            for officer_record in officers_data:
-                f.write(json.dumps(officer_record) + '\n')
-        logger.info(f"Successfully generated and saved {num_officers} synthetic records to {output_file}")
-    except IOError as e:
-        logger.error(f"Error writing synthetic data to {output_file}: {e}")
-        raise
-    except Exception as e:
-        logger.error(f"An unexpected error occurred during synthetic data generation: {e}")
-        raise
+        # Generate competencies with some randomization
+        officer['competencies'] = {}
+        for comp in COMPETENCY_FEATURES:
+            # Add some randomization to prevent memorization
+            officer['competencies'][comp] = round(random.uniform(1, 5), 2)
+
+        # Generate competency domains
+        officer['competency_domains'] = {}
+        for domain in COMPETENCY_DOMAIN_FEATURES:
+            officer['competency_domains'][domain] = round(random.uniform(1, 5), 2)
+
+        # Generate psychometric scores
+        officer['psychometric_scores'] = {}
+        for trait in PSYCHOMETRIC_FEATURES:
+            officer['psychometric_scores'][trait] = round(random.uniform(1, 5), 2)
+
+        # Generate leadership competency summary based on competencies with added randomization
+        officer['leadership_competency_summary'] = {}
+        # Strategic Thinking: weighted sum of relevant competencies plus noise
+        officer['leadership_competency_summary']['strategic_thinking'] = np.clip(
+            0.5 * officer['competencies']['thinks_strategically'] +
+            0.3 * officer['competencies']['engages_in_ethical_reasoning'] +
+            0.2 * officer['competencies']['builds_trust'] +
+            np.random.normal(0, 0.2),
+            1, 5
+        )
+        # Communication: weighted sum of relevant competencies plus noise
+        officer['leadership_competency_summary']['communication'] = np.clip(
+            0.4 * officer['competencies']['possesses_english_language_skills'] +
+            0.4 * officer['competencies']['facilitates_collaboration_communication'] +
+            0.2 * officer['competencies']['builds_consensus'] +
+            np.random.normal(0, 0.2),
+            1, 5
+        )
+        # Team Leadership: weighted sum of relevant competencies plus noise
+        officer['leadership_competency_summary']['team_leadership'] = np.clip(
+            0.3 * officer['competencies']['builds_trust'] +
+            0.3 * officer['competencies']['facilitates_collaboration_communication'] +
+            0.2 * officer['competencies']['enables_empowers_others'] +
+            0.2 * officer['competencies']['relationship_oriented'] +
+            np.random.normal(0, 0.2),
+            1, 5
+        )
+        # Execution: weighted sum of relevant competencies plus noise
+        officer['leadership_competency_summary']['execution'] = np.clip(
+            0.3 * officer['competencies']['understands_capabilities'] +
+            0.3 * officer['competencies']['provides_support_for_change'] +
+            0.2 * officer['competencies']['enables_empowers_others'] +
+            0.2 * officer['competencies']['upholds_principles'] +
+            np.random.normal(0, 0.2),
+            1, 5
+        )
+        # Adaptability: weighted sum of relevant competencies plus noise
+        officer['leadership_competency_summary']['adaptability'] = np.clip(
+            0.3 * officer['competencies']['thrives_in_ambiguity'] +
+            0.3 * officer['competencies']['demonstrates_resilience'] +
+            0.2 * officer['competencies']['learning_oriented'] +
+            0.2 * officer['competencies']['anticipates_change_requirements'] +
+            np.random.normal(0, 0.2),
+            1, 5
+        )
+
+        officers.append(officer)
+
+    # Save to JSONL file
+    os.makedirs(os.path.dirname(output_file), exist_ok=True)
+    with open(output_file, 'w') as f:
+        for officer in officers:
+            f.write(json.dumps(officer) + '\n')
+    logger.info(f"Successfully generated and saved {num_officers} synthetic records to {output_file}")
+
+def convert_json_array_to_jsonl(file_path):
+    """
+    Converts a JSON array file to JSON Lines format.
+    """
+    logger.info(f"Converting {file_path} to JSON Lines format...")
+    with open(file_path, 'r') as f:
+        data = json.load(f)
+    with open(file_path, 'w') as f:
+        for item in data:
+            f.write(json.dumps(item) + '\n')
+    logger.info(f"Successfully converted {file_path} to JSON Lines format.")
+
+def apply_competency_derivation_logic(file_path):
+    """
+    Applies the competency derivation logic to an existing JSON Lines file.
+    """
+    logger.info(f"Applying competency derivation logic to {file_path}...")
+    officers = []
+    with open(file_path, 'r') as f:
+        for line in f:
+            officer = json.loads(line)
+            # Apply competency derivation logic
+            officer['leadership_competency_summary'] = {}
+            # Strategic Thinking: weighted sum of relevant competencies plus noise
+            officer['leadership_competency_summary']['strategic_thinking'] = float(np.clip(
+                0.5 * officer['competencies']['thinks_strategically'] +
+                0.3 * officer['competencies']['engages_in_ethical_reasoning'] +
+                0.2 * officer['competencies']['builds_trust'] +
+                np.random.normal(0, 0.2),
+                1, 5
+            ))
+            # Communication: weighted sum of relevant competencies plus noise
+            officer['leadership_competency_summary']['communication'] = float(np.clip(
+                0.4 * officer['competencies']['possesses_english_language_skills'] +
+                0.4 * officer['competencies']['facilitates_collaboration_communication'] +
+                0.2 * officer['competencies']['builds_consensus'] +
+                np.random.normal(0, 0.2),
+                1, 5
+            ))
+            # Team Leadership: weighted sum of relevant competencies plus noise
+            officer['leadership_competency_summary']['team_leadership'] = float(np.clip(
+                0.3 * officer['competencies']['builds_trust'] +
+                0.3 * officer['competencies']['facilitates_collaboration_communication'] +
+                0.2 * officer['competencies']['enables_empowers_others'] +
+                0.2 * officer['competencies']['relationship_oriented'] +
+                np.random.normal(0, 0.2),
+                1, 5
+            ))
+            # Execution: weighted sum of relevant competencies plus noise
+            officer['leadership_competency_summary']['execution'] = float(np.clip(
+                0.3 * officer['competencies']['understands_capabilities'] +
+                0.3 * officer['competencies']['provides_support_for_change'] +
+                0.2 * officer['competencies']['enables_empowers_others'] +
+                0.2 * officer['competencies']['upholds_principles'] +
+                np.random.normal(0, 0.2),
+                1, 5
+            ))
+            # Adaptability: weighted sum of relevant competencies plus noise
+            officer['leadership_competency_summary']['adaptability'] = float(np.clip(
+                0.3 * officer['competencies']['thrives_in_ambiguity'] +
+                0.3 * officer['competencies']['demonstrates_resilience'] +
+                0.2 * officer['competencies']['learning_oriented'] +
+                0.2 * officer['competencies']['anticipates_change_requirements'] +
+                np.random.normal(0, 0.2),
+                1, 5
+            ))
+            officers.append(officer)
+
+    # Save the updated data back to the file
+    with open(file_path, 'w') as f:
+        for officer in officers:
+            f.write(json.dumps(officer) + '\n')
+    logger.info(f"Successfully applied competency derivation logic to {file_path}")
+
+# Remove the conversion step and just apply the competency derivation logic
+# apply_competency_derivation_logic('data/synthetic_data/generated_256.json')
+# apply_competency_derivation_logic('data/synthetic_data/generated_1000.jsonl')
+# apply_competency_derivation_logic('data/synthetic_data/generated_2500.jsonl')
+
+if __name__ == "__main__":
+    apply_competency_derivation_logic('data/synthetic_data/generated_256.json')
+    apply_competency_derivation_logic('data/synthetic_data/generated_1000.jsonl')
+    apply_competency_derivation_logic('data/synthetic_data/generated_2500.jsonl')

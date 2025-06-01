@@ -28,12 +28,15 @@ Provides interactive visualizations and real-time predictions through a web inte
 Can be run independently without affecting CLI functionality.
 """
 
-from flask import Flask, render_template, request, jsonify, send_file
+from flask import Flask, render_template, request, jsonify, send_file, flash, redirect, url_for
+from flask_login import LoginManager, UserMixin, login_user, login_required, logout_user, current_user
 import os
 import json
 import pandas as pd
 from pathlib import Path
 import logging
+import hashlib
+import secrets
 
 from .predictor import predict_competencies
 from .visualizations import (
@@ -45,6 +48,10 @@ from .data_loader import load_data_from_jsonl
 
 logger = logging.getLogger(__name__)
 
+class User(UserMixin):
+    def __init__(self, id):
+        self.id = id
+
 class Dashboard:
     def __init__(self, model_path="models/leadership_model.joblib", 
                  preprocessor_path="models/preprocessor.joblib",
@@ -54,6 +61,22 @@ class Dashboard:
         self.preprocessor_path = preprocessor_path
         self.data_path = data_path
         self.app = Flask(__name__)
+        
+        # Set up Flask-Login
+        self.app.secret_key = secrets.token_hex(16)  # Generate a random secret key
+        self.login_manager = LoginManager()
+        self.login_manager.init_app(self.app)
+        self.login_manager.login_view = 'login'
+        
+        # Store admin credentials (in a real app, this would be in a database)
+        self.admin_username = "admin"
+        # Hash the password using SHA-256
+        self.admin_password_hash = hashlib.sha256("admin".encode()).hexdigest()
+        
+        @self.login_manager.user_loader
+        def load_user(user_id):
+            return User(user_id)
+        
         self.setup_routes()
         
         # Create necessary directories
@@ -72,11 +95,37 @@ class Dashboard:
 
     def setup_routes(self):
         """Set up Flask routes."""
+        @self.app.route('/login', methods=['GET', 'POST'])
+        def login():
+            if request.method == 'POST':
+                username = request.form.get('username')
+                password = request.form.get('password')
+                
+                # Hash the provided password
+                password_hash = hashlib.sha256(password.encode()).hexdigest()
+                
+                if username == self.admin_username and password_hash == self.admin_password_hash:
+                    user = User(username)
+                    login_user(user)
+                    return redirect(url_for('index'))
+                else:
+                    flash('Invalid username or password')
+            
+            return render_template('login.html')
+
+        @self.app.route('/logout')
+        @login_required
+        def logout():
+            logout_user()
+            return redirect(url_for('login'))
+
         @self.app.route('/')
+        @login_required
         def index():
             return render_template('index.html')
 
         @self.app.route('/predict', methods=['POST'])
+        @login_required
         def predict():
             try:
                 officer_data = request.json
@@ -104,10 +153,12 @@ class Dashboard:
                 }), 400
 
         @self.app.route('/analytics')
+        @login_required
         def analytics():
             return render_template('analytics.html')
 
         @self.app.route('/api/stats')
+        @login_required
         def get_stats():
             try:
                 stats = {
@@ -124,6 +175,7 @@ class Dashboard:
                 return jsonify({'error': str(e)}), 500
 
         @self.app.route('/api/statistics')
+        @login_required
         def api_statistics():
             try:
                 df = self.df.copy()

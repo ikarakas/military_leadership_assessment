@@ -29,7 +29,7 @@ Data-driven insights for better leadership assessment.
 """
 
 import pandas as pd
-from sklearn.model_selection import train_test_split
+from sklearn.model_selection import train_test_split, cross_val_score
 from sklearn.ensemble import RandomForestRegressor
 from sklearn.multioutput import MultiOutputRegressor
 from sklearn.metrics import mean_squared_error, r2_score
@@ -75,10 +75,37 @@ def train_model(df_train, model_output_path=DEFAULT_MODEL_PATH, preprocessor_out
         logger.info(f"Training data shape: X_train_proc={X_train_proc.shape}, Y_train={Y_train.shape}")
         logger.info(f"Test data shape: X_test_proc={X_test_proc.shape}, Y_test={Y_test.shape}")
 
-        # Define the model - Random Forest is a good start for this kind of data
-        # Wrap with MultiOutputRegressor for predicting multiple targets
-        base_regressor = RandomForestRegressor(n_estimators=100, random_state=42, n_jobs=-1)
+        # Define the model with stronger regularization
+        base_regressor = RandomForestRegressor(
+            n_estimators=200,  # Increase number of trees
+            max_depth=8,  # Further limit tree depth
+            min_samples_split=10,  # Require more samples to split
+            min_samples_leaf=5,  # Require more samples in leaves
+            max_features='sqrt',  # Use sqrt of features for each split
+            bootstrap=True,  # Use bootstrapping
+            oob_score=True,  # Enable out-of-bag scoring
+            random_state=42,
+            n_jobs=-1
+        )
         multi_output_model = MultiOutputRegressor(base_regressor)
+
+        # Perform cross-validation for each target
+        logger.info("Performing cross-validation...")
+        cv_scores = {}
+        for i, target_name in enumerate(TARGET_COLUMNS):
+            cv_score = cross_val_score(
+                base_regressor,
+                X_train_proc,
+                Y_train.iloc[:, i],
+                cv=5,
+                scoring='r2'
+            )
+            cv_scores[target_name] = {
+                'mean_cv_r2': cv_score.mean(),
+                'std_cv_r2': cv_score.std()
+            }
+            logger.info(f"Cross-validation for {target_name}:")
+            logger.info(f"  Mean R²: {cv_score.mean():.4f} (±{cv_score.std():.4f})")
 
         logger.info("Training the MultiOutputRegressor model...")
         multi_output_model.fit(X_train_proc, Y_train)
@@ -98,7 +125,12 @@ def train_model(df_train, model_output_path=DEFAULT_MODEL_PATH, preprocessor_out
             logger.info(f"Target: {target_name}")
             logger.info(f"  Train MSE: {train_mse:.4f}, Test MSE: {test_mse:.4f}")
             logger.info(f"  Train R2: {train_r2:.4f}, Test R2: {test_r2:.4f}")
-            results[target_name] = {'test_mse': test_mse, 'test_r2': test_r2}
+            results[target_name] = {
+                'test_mse': test_mse,
+                'test_r2': test_r2,
+                'cv_mean_r2': cv_scores[target_name]['mean_cv_r2'],
+                'cv_std_r2': cv_scores[target_name]['std_cv_r2']
+            }
 
         # Generate visualizations
         logger.info("Generating model performance visualizations...")

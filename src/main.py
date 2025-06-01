@@ -181,14 +181,17 @@ def handle_dashboard(args):
     """Handle the dashboard command."""
     logger.info(f"Launching dashboard on {args.host}:{args.port}")
     try:
+        # Try importing Flask-Login first to check if it's installed
+        import flask_login
         from src.web_dashboard import Dashboard
         dashboard = Dashboard(
             model_path=args.model_path,
             data_path=args.data_path
         )
         dashboard.run(host=args.host, port=args.port)
-    except ImportError:
-        logger.error("Dashboard dependencies not installed. Please install Flask and other web dependencies.")
+    except ImportError as e:
+        logger.error(f"Missing required dependency: {str(e)}")
+        logger.error("Please install Flask-Login using: pip install flask-login")
         sys.exit(1)
     except Exception as e:
         logger.error(f"Error launching dashboard: {e}")

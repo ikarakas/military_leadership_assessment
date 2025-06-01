@@ -31,7 +31,7 @@ Turns raw data into model-ready features.
 
 import pandas as pd
 import numpy as np
-from sklearn.preprocessing import StandardScaler, OneHotEncoder
+from sklearn.preprocessing import MinMaxScaler, OneHotEncoder
 from sklearn.compose import ColumnTransformer
 from sklearn.pipeline import Pipeline
 import logging
@@ -122,26 +122,12 @@ def create_preprocessor(df_for_fitting):
             logger.warning(f"Column '{col}' not found in DataFrame for fitting preprocessor. Adding it as NaN.")
             df_for_fitting[col] = np.nan
 
-
-    # Impute missing numerical values with median
-    # Impute missing categorical values with a constant string 'missing'
-    # (More sophisticated imputation could be added here if needed)
-    numerical_pipeline = Pipeline([
-        ('imputer', SimpleImputer(strategy='median')),
-        ('scaler', StandardScaler())
-    ])
-
-    categorical_pipeline = Pipeline([
-        ('imputer', SimpleImputer(strategy='constant', fill_value='missing')),
-        ('onehot', OneHotEncoder(handle_unknown='ignore', sparse_output=False))
-    ])
-
+    # Convert categorical columns to string type
+    for col in CATEGORICAL_FEATURES:
+        if col in df_for_fitting.columns:
+            df_for_fitting[col] = df_for_fitting[col].astype(str)
 
     # Identify features present in the DataFrame for fitting
-    # This is important because synthetic data or prediction data might miss some due to generation process
-    # or because they are not available for a new officer.
-    # The preprocessor must handle this gracefully.
-
     current_numerical_features = [f for f in NUMERICAL_FEATURES + COMPETENCY_FEATURES + COMPETENCY_DOMAIN_FEATURES + PSYCHOMETRIC_FEATURES if f in df_for_fitting.columns]
     current_categorical_features = [f for f in CATEGORICAL_FEATURES if f in df_for_fitting.columns]
 
@@ -151,10 +137,10 @@ def create_preprocessor(df_for_fitting):
 
     transformers_list = []
     if current_numerical_features:
-        # Use scikit-learn's SimpleImputer
+        # Use MinMaxScaler instead of StandardScaler
         num_pipeline = Pipeline([
             ('imputer', SimpleImputer(strategy='median')),
-            ('scaler', StandardScaler())
+            ('scaler', MinMaxScaler(feature_range=(0, 1)))  # Scale to [0,1] range
         ])
         transformers_list.append(('num', num_pipeline, current_numerical_features))
 
@@ -164,7 +150,6 @@ def create_preprocessor(df_for_fitting):
             ('onehot', OneHotEncoder(handle_unknown='ignore', sparse_output=False))
         ])
         transformers_list.append(('cat', cat_pipeline, current_categorical_features))
-
 
     preprocessor = ColumnTransformer(
         transformers=transformers_list,
@@ -181,14 +166,12 @@ def preprocess_data(df, preprocessor):
     """
     logger.info(f"Preprocessing data with shape: {df.shape}")
 
-    # Ensure all columns the preprocessor was trained on are present
-    # This is tricky. The preprocessor's 'transformers' list stores the original columns.
-    # We need to make sure df has them, or handle it.
-    # For OneHotEncoder with handle_unknown='ignore', it's more robust.
-    # For StandardScaler, columns must match.
+    # Convert categorical columns to string type
+    for col in CATEGORICAL_FEATURES:
+        if col in df.columns:
+            df[col] = df[col].astype(str)
 
-    # Extract feature names from the preprocessor
-    # This is a bit involved to get from a fitted ColumnTransformer
+    # Ensure all columns the preprocessor was trained on are present
     processed_feature_names = []
     try:
         for name, trans, cols in preprocessor.transformers_:
@@ -198,63 +181,35 @@ def preprocess_data(df, preprocessor):
                 processed_feature_names.extend(trans.named_steps['onehot'].get_feature_names_out(cols))
             elif name == 'num':
                 processed_feature_names.extend(cols)
-            # Add other transformer types if used
     except Exception as e:
-        logger.warning(f"Could not get feature names from preprocessor: {e}. Relying on transform output.")
-        # Fallback, feature names might not be accurate if this fails
+        logger.warning(f"Could not extract feature names from preprocessor: {e}")
+        # If we can't get the names, use generic ones
+        processed_feature_names = [f"feature_{i}" for i in range(preprocessor.transform(df).shape[1])]
 
-    # Align columns of df to what preprocessor expects, adding missing ones as NaN
-    # The preprocessor (especially SimpleImputer) should handle these NaNs.
-    all_expected_features = []
-    for _, _, columns in preprocessor.transformers_:
-        all_expected_features.extend(columns)
-    all_expected_features = list(set(all_expected_features)) # unique
-
-    for col in all_expected_features:
-        if col not in df.columns:
-            logger.warning(f"Expected column '{col}' not in DataFrame for preprocessing. Adding as NaN.")
-            df[col] = np.nan
-
-
-    X_processed = preprocessor.transform(df)
-    logger.info(f"Data processed. New shape: {X_processed.shape}")
-
-    # If feature names couldn't be generated properly, create generic ones
-    if not processed_feature_names or len(processed_feature_names) != X_processed.shape[1]:
-        processed_feature_names = [f"feature_{i}" for i in range(X_processed.shape[1])]
-        logger.warning("Used generic feature names as specific names could not be derived from preprocessor.")
-
-
-    X_processed_df = pd.DataFrame(X_processed, columns=processed_feature_names, index=df.index)
-    return X_processed_df
-
+    # Transform the data
+    processed_data = preprocessor.transform(df)
+    
+    # Convert to DataFrame with proper column names
+    processed_df = pd.DataFrame(processed_data, columns=processed_feature_names)
+    logger.info(f"Data processed. New shape: {processed_df.shape}")
+    return processed_df
 
 def get_features_and_targets(df):
-    """Separates features (X) and targets (Y) from the DataFrame."""
-    logger.info("Separating features and targets.")
+    """
+    Extracts features and target variables from the DataFrame.
+    """
+    # First flatten any nested JSON structures
     df_flat = flatten_nested_json_features(df.copy())
-
-    # Check if target columns exist
-    missing_targets = [tc for tc in TARGET_COLUMNS if tc not in df_flat.columns]
-    if missing_targets:
-        logger.warning(f"Target columns missing, cannot extract Y: {missing_targets}. Assuming prediction mode for this data.")
-        Y = None
-    else:
-        Y = df_flat[TARGET_COLUMNS]
-        logger.info(f"Targets (Y) extracted. Shape: {Y.shape}")
-
-
-    # Define X_cols: all columns that are not targets and not identifiers/raw text
-    potential_feature_cols = NUMERICAL_FEATURES + COMPETENCY_FEATURES + COMPETENCY_DOMAIN_FEATURES + PSYCHOMETRIC_FEATURES + CATEGORICAL_FEATURES
     
-    # Select only columns that exist in df_flat to avoid KeyErrors
-    X_cols = [col for col in potential_feature_cols if col in df_flat.columns]
+    # Create preprocessor
+    preprocessor = create_preprocessor(df_flat)
     
-    if not X_cols:
-        logger.error("No feature columns found after flattening and selection.")
-        raise ValueError("No feature columns identified. Check feature definitions and data.")
-
-    X = df_flat[X_cols]
-    logger.info(f"Features (X) extracted. Shape: {X.shape}")
-
-    return X, Y
+    # Preprocess features
+    X = preprocess_data(df_flat, preprocessor)
+    
+    # Extract targets if they exist
+    y = None
+    if all(col in df_flat.columns for col in TARGET_COLUMNS):
+        y = df_flat[TARGET_COLUMNS]
+    
+    return X, y
