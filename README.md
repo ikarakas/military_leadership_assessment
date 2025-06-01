@@ -1,4 +1,4 @@
-# ALPHA : "Assessment of Leadership Potential and High-performance Abilities” 
+# ALPHA : "Assessment of Leadership Potential and High-performance Abilities" 
 
 
 This Python-based command-line application uses machine learning to assess and predict leadership competencies for military officers.
@@ -116,7 +116,7 @@ This Python-based command-line application uses machine learning to assess and p
    The trained MultiOutputRegressor model is saved to a .joblib file (default: models/leadership_model.joblib).
    The fitted ColumnTransformer preprocessor is also saved to a .joblib file (default: models/preprocessor.joblib).
 
-5. Model Evaluation (model_trainer.py):
+5. Model Evaluation and Visualization (model_trainer.py and visualizations.py):
 
    Predictions are made on both the training and test sets.
    Performance is evaluated for each target variable independently.
@@ -124,9 +124,23 @@ This Python-based command-line application uses machine learning to assess and p
    Metrics Used:
    Mean Squared Error (MSE): mean_squared_error is calculated to measure the average squared difference between predicted and actual values.
    R-squared (R² score): r2_score is calculated to determine the proportion of the variance in the dependent variable that is predictable from the independent variables.
-   Results are logged and can be used for visualization (e.g., plot_model_performance).
 
-6. Prediction (predictor.py):
+   Visualization Generation:
+   * Feature Importance Plots: Generated for each competency dimension showing the relative importance of input features
+   * Model Performance Visualization: Overall model performance metrics across all competencies
+   * Officer Radar Charts: Individual officer competency predictions visualized as radar charts
+   * All visualizations are automatically saved to the visualizations/ directory
+
+6. Web-Based Prediction and Analytics (web_dashboard.py):
+
+   The trained model and preprocessor are integrated into a web interface for:
+   * Real-time predictions for new officer profiles
+   * Interactive visualization of predictions using radar charts
+   * Analytics dashboard showing model performance metrics
+   * Feature importance visualization for each competency
+   * Secure access control for sensitive data
+
+7. Prediction (predictor.py):
 
    Loading Artifacts: For making predictions on new officer data, the saved model (.joblib) and preprocessor (.joblib) are loaded.
 
@@ -137,6 +151,7 @@ This Python-based command-line application uses machine learning to assess and p
    
    Making Predictions: The preprocessed features of the officer are fed into the loaded model's predict method.
    Output: The predictions (an array of scores for the target competencies) are formatted into a dictionary, mapping target names to their predicted scores.
+   Visualization: A radar chart is automatically generated for the predicted competencies and saved to the visualizations/ directory.
 
 
 ## Security Considerations
