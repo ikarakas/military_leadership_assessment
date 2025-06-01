@@ -1,0 +1,256 @@
+{% extends "base.html" %}
+
+{% block title %}Home - Military Leadership Assessment{% endblock %}
+
+{% block content %}
+<div class="row">
+    <div class="col-md-7">
+        <div class="card mb-4">
+            <div class="card-header">
+                <h5 class="card-title">Predict Leadership Competencies</h5>
+            </div>
+            <div class="card-body">
+                <form id="predictionForm">
+                    <!-- Categorical Features -->
+                    <h6 class="mb-2 mt-2">Basic Information</h6>
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <label for="branch" class="form-label">Branch</label>
+                            <select class="form-select" id="branch" name="branch" required>
+                                <option value="Army">Army</option>
+                                <option value="Navy">Navy</option>
+                                <option value="Air Force">Air Force</option>
+                                <option value="Marines">Marines</option>
+                                <option value="Space Force">Space Force</option>
+                            </select>
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <label for="rank" class="form-label">Rank</label>
+                            <select class="form-select" id="rank" name="rank" required>
+                                <option value="Captain">Captain</option>
+                                <option value="Major">Major</option>
+                                <option value="Lieutenant Colonel">Lieutenant Colonel</option>
+                                <option value="Colonel">Colonel</option>
+                                <option value="Brigadier General">Brigadier General</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <label for="specialty" class="form-label">Specialty</label>
+                            <select class="form-select" id="specialty" name="specialty">
+                                <option value="Infantry">Infantry</option>
+                                <option value="Artillery">Artillery</option>
+                                <option value="Engineering">Engineering</option>
+                                <option value="Logistics">Logistics</option>
+                                <option value="Intelligence">Intelligence</option>
+                                <option value="Cyber Operations">Cyber Operations</option>
+                                <option value="Medical">Medical</option>
+                                <option value="Aviation">Aviation</option>
+                                <option value="Special Forces">Special Forces</option>
+                                <option value="Signals">Signals</option>
+                            </select>
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <label for="education" class="form-label">Education</label>
+                            <select class="form-select" id="education" name="education">
+                                <option value="ROTC">ROTC</option>
+                                <option value="Academy">Academy</option>
+                                <option value="OCS">OCS</option>
+                                <option value="Direct Commission">Direct Commission</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <label for="leadership_style" class="form-label">Leadership Style</label>
+                            <select class="form-select" id="leadership_style" name="leadership_style">
+                                <option value="Visionary">Visionary</option>
+                                <option value="Coaching">Coaching</option>
+                                <option value="Affiliative">Affiliative</option>
+                                <option value="Democratic">Democratic</option>
+                                <option value="Pacesetting">Pacesetting</option>
+                                <option value="Commanding">Commanding</option>
+                                <option value="Servant">Servant</option>
+                            </select>
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <label for="rank_index" class="form-label">Rank Index</label>
+                            <input type="number" step="0.01" min="0" max="1.5" class="form-control" id="rank_index" name="rank_index" value="0.5">
+                        </div>
+                    </div>
+                    <div class="row">
+                        <div class="col-md-4 mb-3">
+                            <label for="age" class="form-label">Age</label>
+                            <input type="number" min="22" max="65" class="form-control" id="age" name="age" value="40">
+                        </div>
+                        <div class="col-md-4 mb-3">
+                            <label for="years_of_service" class="form-label">Years of Service</label>
+                            <input type="number" min="0" max="40" class="form-control" id="years_of_service" name="years_of_service" value="15">
+                        </div>
+                        <div class="col-md-4 mb-3">
+                            <label for="combat_deployments" class="form-label">Combat Deployments</label>
+                            <input type="number" min="0" max="20" class="form-control" id="combat_deployments" name="combat_deployments" value="2">
+                        </div>
+                    </div>
+                    <div class="row">
+                        <div class="col-md-4 mb-3">
+                            <label for="medals_and_commendations" class="form-label">Medals & Commendations</label>
+                            <input type="number" min="0" max="50" class="form-control" id="medals_and_commendations" name="medals_and_commendations" value="5">
+                        </div>
+                        <div class="col-md-4 mb-3">
+                            <label for="unit_readiness_score" class="form-label">Unit Readiness Score</label>
+                            <input type="number" min="0" max="100" class="form-control" id="unit_readiness_score" name="unit_readiness_score" value="80">
+                        </div>
+                        <div class="col-md-4 mb-3">
+                            <label for="promotion_potential_score" class="form-label">Promotion Potential Score</label>
+                            <input type="number" min="1" max="5" class="form-control" id="promotion_potential_score" name="promotion_potential_score" value="3">
+                        </div>
+                    </div>
+                    <!-- Competency Features -->
+                    <h6 class="mb-2 mt-4">Competency Scores</h6>
+                    <div class="row">
+                        {% for comp in [
+                            "thinks_strategically", "possesses_english_language_skills", "engages_in_ethical_reasoning",
+                            "builds_trust", "facilitates_collaboration_communication", "builds_consensus",
+                            "integrates_technology", "understands_effects_of_leveraging_technology",
+                            "understands_capabilities", "instills_need_for_change", "anticipates_change_requirements",
+                            "provides_support_for_change", "enables_empowers_others", "upholds_principles",
+                            "relationship_oriented", "thrives_in_ambiguity", "demonstrates_resilience",
+                            "learning_oriented", "operates_in_nato_context", "operates_in_military_context",
+                            "operates_in_cross_cultural_context"
+                        ] %}
+                        <div class="col-md-4 mb-3">
+                            <label for="{{ comp }}" class="form-label">{{ comp.replace('_', ' ').title() }}</label>
+                            <input type="number" min="1" max="5" class="form-control" id="{{ comp }}" name="{{ comp }}" value="3">
+                        </div>
+                        {% endfor %}
+                    </div>
+                    <!-- Competency Domain Features -->
+                    <h6 class="mb-2 mt-4">Competency Domains</h6>
+                    <div class="row">
+                        {% for domain in ["cognitive", "social", "technological", "transformative", "personal", "professional"] %}
+                        <div class="col-md-4 mb-3">
+                            <label for="{{ domain }}" class="form-label">{{ domain.title() }}</label>
+                            <input type="number" min="1" max="5" step="0.01" class="form-control" id="{{ domain }}" name="{{ domain }}" value="3">
+                        </div>
+                        {% endfor %}
+                    </div>
+                    <!-- Psychometric Features -->
+                    <h6 class="mb-2 mt-4">Psychometric Scores</h6>
+                    <div class="row">
+                        {% for psych in ["conscientiousness", "extraversion", "agreeableness", "neuroticism", "openness"] %}
+                        <div class="col-md-4 mb-3">
+                            <label for="{{ psych }}" class="form-label">{{ psych.title() }}</label>
+                            <input type="number" min="1" max="5" class="form-control" id="{{ psych }}" name="{{ psych }}" value="3">
+                        </div>
+                        {% endfor %}
+                    </div>
+                    <button type="submit" class="btn btn-primary mt-3">Predict</button>
+                </form>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-5">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="card-title">Prediction Results</h5>
+            </div>
+            <div class="card-body">
+                <div id="results" style="display: none;">
+                    <div class="chart-container">
+                        <canvas id="radarChart"></canvas>
+                    </div>
+                    <div class="mt-3">
+                        <h6>Competency Scores:</h6>
+                        <ul id="competencyScores" class="list-group"></ul>
+                    </div>
+                </div>
+                <div id="noResults" class="text-center text-muted">
+                    Submit a prediction to see results
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+let radarChartInstance = null;
+
+document.getElementById('predictionForm').addEventListener('submit', async (e) => {
+    e.preventDefault();
+    const form = e.target;
+    const formData = {};
+    // Gather all form fields
+    Array.from(form.elements).forEach(el => {
+        if (el.name && el.value !== undefined) {
+            if (el.type === 'number') {
+                formData[el.name] = el.value === '' ? null : Number(el.value);
+            } else {
+                formData[el.name] = el.value;
+            }
+        }
+    });
+    try {
+        const response = await fetch('/predict', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify(formData)
+        });
+        const data = await response.json();
+        if (data.success) {
+            document.getElementById('noResults').style.display = 'none';
+            document.getElementById('results').style.display = 'block';
+            // Destroy previous chart if it exists
+            if (radarChartInstance) {
+                radarChartInstance.destroy();
+            }
+            // Update radar chart
+            const ctx = document.getElementById('radarChart').getContext('2d');
+            radarChartInstance = new Chart(ctx, {
+                type: 'radar',
+                data: {
+                    labels: Object.keys(data.predictions),
+                    datasets: [{
+                        label: 'Competency Scores',
+                        data: Object.values(data.predictions),
+                        backgroundColor: 'rgba(54, 162, 235, 0.2)',
+                        borderColor: 'rgba(54, 162, 235, 1)',
+                        borderWidth: 1
+                    }]
+                },
+                options: {
+                    scales: {
+                        r: {
+                            beginAtZero: true,
+                            max: 5
+                        }
+                    }
+                }
+            });
+            // Update competency scores list
+            const scoresList = document.getElementById('competencyScores');
+            scoresList.innerHTML = '';
+            Object.entries(data.predictions).forEach(([key, value]) => {
+                const li = document.createElement('li');
+                li.className = 'list-group-item d-flex justify-content-between align-items-center';
+                li.innerHTML = `
+                    ${key.replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase())}
+                    <span class="badge bg-primary rounded-pill">${value.toFixed(2)}</span>
+                `;
+                scoresList.appendChild(li);
+            });
+        } else {
+            alert('Error: ' + data.error);
+        }
+    } catch (error) {
+        console.error('Error:', error);
+        alert('An error occurred while making the prediction.');
+    }
+});
+</script>
+{% endblock %} 

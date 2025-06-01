@@ -28,6 +28,8 @@ Transforms complex data into clear, actionable insights.
 Makes leadership competencies visible and understandable.
 """
 
+import matplotlib
+matplotlib.use('Agg')
 import matplotlib.pyplot as plt
 import seaborn as sns
 import pandas as pd

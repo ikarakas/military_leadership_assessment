@@ -177,6 +177,26 @@ def handle_visualize(args):
         logger.error(f"An unexpected error occurred during visualization: {e}", exc_info=True)
         sys.exit(1)
 
+def handle_dashboard(args):
+    """Handle the dashboard command."""
+    logger.info(f"Launching dashboard on {args.host}:{args.port}")
+    try:
+        # Try importing Flask-Login first to check if it's installed
+        import flask_login
+        from src.web_dashboard import Dashboard
+        dashboard = Dashboard(
+            model_path=args.model_path,
+            data_path=args.data_path
+        )
+        dashboard.run(host=args.host, port=args.port)
+    except ImportError as e:
+        logger.error(f"Missing required dependency: {str(e)}")
+        logger.error("Please install Flask-Login using: pip install flask-login")
+        sys.exit(1)
+    except Exception as e:
+        logger.error(f"Error launching dashboard: {e}")
+        sys.exit(1)
+
 def main():
     global logger # Allow main to assign the global logger
 
@@ -216,6 +236,14 @@ def main():
     viz_parser.add_argument("--model-path", type=str, default=DEFAULT_MODEL_PATH, help=f"Path to the trained model file (default: {DEFAULT_MODEL_PATH})")
     viz_parser.add_argument("--output-dir", type=str, default="visualizations", help="Directory to save visualizations (default: visualizations)")
     viz_parser.set_defaults(func=handle_visualize)
+
+    # Dashboard command
+    dashboard_parser = subparsers.add_parser("dashboard", help="Launch the web dashboard")
+    dashboard_parser.add_argument("--host", type=str, default="127.0.0.1", help="Host to run the dashboard on (default: 127.0.0.1)")
+    dashboard_parser.add_argument("--port", type=int, default=5000, help="Port to run the dashboard on (default: 5000)")
+    dashboard_parser.add_argument("--model-path", type=str, default=DEFAULT_MODEL_PATH, help=f"Path to the trained model file (default: {DEFAULT_MODEL_PATH})")
+    dashboard_parser.add_argument("--data-path", type=str, default="data/synthetic_data/generated_1000.jsonl", help="Path to the data file (default: data/synthetic_data/generated_1000.jsonl)")
+    dashboard_parser.set_defaults(func=handle_dashboard)
 
     args = parser.parse_args()
 
