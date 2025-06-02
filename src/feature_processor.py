@@ -105,6 +105,13 @@ def flatten_nested_json_features(df):
        isinstance(df['leadership_competency_summary'].iloc[0], dict): # check if it's not already flattened
         target_df = pd.json_normalize(df['leadership_competency_summary'])
         df = pd.concat([df.drop('leadership_competency_summary', axis=1), target_df], axis=1)
+
+    # Ensure top-level columns are preserved
+    top_level_columns = ['branch', 'rank', 'specialty', 'education', 'leadership_style']
+    for col in top_level_columns:
+        if col not in df.columns:
+            df[col] = np.nan
+
     logger.info(f"DataFrame shape after flattening: {df.shape}")
     return df
 
